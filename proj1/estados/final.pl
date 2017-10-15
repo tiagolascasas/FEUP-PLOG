@@ -1,5 +1,5 @@
 pos(nw, nw, g). pos(nw, n, b). pos(nw, ne, 0).   	pos( n, nw, b). pos( n, n, g). pos( n, ne, g).   	pos(ne, nw, g). pos(ne, n, g). pos(ne, ne, b).
-pos(nw,  w, b). pos(nw, c, 0). pos(nw, e,  0).   	pos( n,  w, g). pos( n, c, g). pos( n,  e, b).   	pos(ne,  w, b). pos(ne, c, g). pos(ne,  e, b).
+pos(nw,  w, b). pos(nw, c, 0). pos(nw, e,  w).   	pos( n,  w, g). pos( n, c, g). pos( n,  e, b).   	pos(ne,  w, b). pos(ne, c, g). pos(ne,  e, b).
 pos(nw, sw, b). pos(nw, s, 0). pos(nw, se, 0).   	pos( n, sw, b). pos( n, s, g). pos( n, se, g).   	pos(ne, sw, g). pos(ne, s, 0). pos(ne, se, g).
 
 pos( w, nw, g). pos( w, n, b). pos( w, ne, g).   	pos( c, nw, b). pos( c, n, 0). pos( c, ne, 0).   	pos( e, nw, g). pos( e, n, 0). pos( e, ne, g).

@@ -1,11 +1,11 @@
 :- use_module(library(random)).
 :- use_module(library(system)).
-:- include('positions.pl').
+%:- include('positions.pl').
 
 %states of the game to use as an example
 %:-include('estados/inicial.pl').
 %:-include('estados/intermedio.pl').
-%:-include('estados/final.pl').
+:-include('estados/final.pl').
 
 printBoard :- 	nl,
 				printRow1, nl,
@@ -17,7 +17,7 @@ printBoard :- 	nl,
 				printRow7, nl,
 				printRow8, nl,
 				printRow9, nl, nl,
-				write('0 - empty   b - Black   g - Green'), nl, nl.
+				write('0 - Empty  w - Waiter'), nl, write('g - Green  b - Black'), nl, nl.
 
 printRow1 :- printTableTop(nw), write('   '), printTableTop(n), write('   '), printTableTop(ne).
 printRow2 :- printTableMiddle(nw), write('   '), printTableMiddle(n), write('   '), printTableMiddle(ne).
