@@ -1,12 +1,9 @@
 :- use_module(library(random)).
 :- use_module(library(system)).
-%:- include('positions.pl').
+:- include('positions.pl').
 
-%states of the game to use as an example
-%:-include('estados/inicial.pl').
-%:-include('estados/intermedio.pl').
-:-include('estados/final.pl').
-
+% Display
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 printBoard :- 	nl,
 				printRow1, nl,
 				printRow2, nl,
@@ -17,7 +14,8 @@ printBoard :- 	nl,
 				printRow7, nl,
 				printRow8, nl,
 				printRow9, nl, nl,
-				write('0 - Empty  w - Waiter'), nl, write('g - Green  b - Black'), nl, nl.
+				write('o - Empty g - Green  b - Black'), nl,
+				printWaiterPos, nl, nl.
 
 printRow1 :- printTableTop(nw), write('   '), printTableTop(n), write('   '), printTableTop(ne).
 printRow2 :- printTableMiddle(nw), write('   '), printTableMiddle(n), write('   '), printTableMiddle(ne).
@@ -36,3 +34,31 @@ printTableMiddle(Table) :- printPos(Table, w), write(' '), printPos(Table, c), w
 printTableBottom(Table) :- printPos(Table, sw), write(' '), printPos(Table, s), write(' '), printPos(Table, se).
 
 printPos(Table, Pos) :- pos(Table, Pos, X), write(X).
+
+printWaiterPos :- waiterPos(X, Y), write('Waiter in table '), write(X), write(' and position '), write(Y).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% Game settings
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+:- dynamic gameType/1.
+:- dynamic gameRunning/1.
+gameType('null').
+gameRunning('null').
+
+start_1vs1 :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), 
+				assert(gameType('1vs1')), nl, initGame, write('1 vs 1 game started successfully'), nl, printBoard.
+
+start_1vsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), 
+				assert(gameType('1vsAI')), nl, initGame, write('1 vs AI game started successfully'), nl, printBoard.
+
+start_AIvsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), 
+				assert(gameType('AIvsAI')), nl, initGame, write('AI vs AI game started successfully'), nl, printBoard.
+				
+initGame :- assert(gameRunning('yes')).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Movements
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

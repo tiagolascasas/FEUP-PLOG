@@ -1,11 +1,15 @@
-pos(nw, nw, 0). pos(nw, n, 0). pos(nw, ne, 0).   	pos( n, nw, 0). pos( n, n, 0). pos( n, ne, 0).   	pos(ne, nw, 0). pos(ne, n, 0). pos(ne, ne, 0).
-pos(nw,  w, 0). pos(nw, c, 0). pos(nw, e,  0).   	pos( n,  w, 0). pos( n, c, 0). pos( n,  e, 0).   	pos(ne,  w, 0). pos(ne, c, 0). pos(ne,  e, 0).
-pos(nw, sw, 0). pos(nw, s, 0). pos(nw, se, 0).   	pos( n, sw, 0). pos( n, s, 0). pos( n, se, 0).   	pos(ne, sw, 0). pos(ne, s, 0). pos(ne, se, 0).
+:- dynamic pos/3.
 
-pos( w, nw, 0). pos( w, n, 0). pos( w, ne, 0).   	pos( c, nw, 0). pos( c, n, 0). pos( c, ne, 0).   	pos( e, nw, 0). pos( e, n, 0). pos( e, ne, 0).
-pos( w,  w, 0). pos( w, c, 0). pos( w, e,  0).   	pos( c,  w, 0). pos( c, c, 0). pos( c,  e, 0).   	pos( e, w, 0).  pos( e, c, 0). pos( e,  e, 0).
-pos( w, sw, 0). pos( w, s, 0). pos( w, se, 0).   	pos( c, sw, 0). pos( c, s, 0). pos( c, se, 0).   	pos( e, sw, 0). pos( e, s, 0). pos( e, se, 0).
+pos(nw, nw, o). pos(nw, n, o). pos(nw, ne, o).   	pos( n, nw, o). pos( n, n, o). pos( n, ne, o).   	pos(ne, nw, o). pos(ne, n, o). pos(ne, ne, o).
+pos(nw,  w, o). pos(nw, c, o). pos(nw, e,  o).   	pos( n,  w, o). pos( n, c, o). pos( n,  e, o).   	pos(ne,  w, o). pos(ne, c, o). pos(ne,  e, o).
+pos(nw, sw, o). pos(nw, s, o). pos(nw, se, o).   	pos( n, sw, o). pos( n, s, o). pos( n, se, o).   	pos(ne, sw, o). pos(ne, s, o). pos(ne, se, o).
 
-pos(sw, nw, 0). pos(sw, n, 0). pos(sw, ne, 0).  	pos( s, nw, 0). pos( s, n, 0). pos( s, ne, 0).   	pos(se, nw, 0). pos(se, n, 0). pos(se, ne, 0).
-pos(sw,  w, 0). pos(sw, c, 0). pos(sw, e,  0).   	pos( s,  w, 0). pos( s, c, 0). pos( s,  e, 0).   	pos(se, w, 0).  pos(se, c, 0). pos(se,  e, 0).
-pos(sw, sw, 0). pos(sw, s, 0). pos(sw, se, 0).   	pos( s, sw, 0). pos( s, s, 0). pos( s, se, 0).   	pos(se, sw, 0). pos(se, s, 0). pos(se, se, 0).
+pos( w, nw, o). pos( w, n, o). pos( w, ne, o).   	pos( c, nw, o). pos( c, n, o). pos( c, ne, o).   	pos( e, nw, o). pos( e, n, o). pos( e, ne, o).
+pos( w,  w, o). pos( w, c, o). pos( w, e,  o).   	pos( c,  w, o). pos( c, c, o). pos( c,  e, o).   	pos( e, w, o).  pos( e, c, o). pos( e,  e, o).
+pos( w, sw, o). pos( w, s, o). pos( w, se, o).   	pos( c, sw, o). pos( c, s, o). pos( c, se, o).   	pos( e, sw, o). pos( e, s, o). pos( e, se, o).
+
+pos(sw, nw, o). pos(sw, n, o). pos(sw, ne, o).  	pos( s, nw, o). pos( s, n, o). pos( s, ne, o).   	pos(se, nw, o). pos(se, n, o). pos(se, ne, o).
+pos(sw,  w, o). pos(sw, c, o). pos(sw, e,  o).   	pos( s,  w, o). pos( s, c, o). pos( s,  e, o).   	pos(se, w, o).  pos(se, c, o). pos(se,  e, o).
+pos(sw, sw, o). pos(sw, s, o). pos(sw, se, o).   	pos( s, sw, o). pos( s, s, o). pos( s, se, o).   	pos(se, sw, o). pos(se, s, o). pos(se, se, o).
+
+waiterPos(c, c).
