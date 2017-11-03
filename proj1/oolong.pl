@@ -62,3 +62,30 @@ initGame :- assert(gameRunning('yes')).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Start
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+start('1vs1') :- start_1vs1.
+start('1vsAI') :- start_1vsAI.
+start('AIvsAI') :- start_AIvsAI.
+
+start(N):- N \= '1vs1', N \= '1vsAI', N \= 'AIvsAI', fail.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Game cycle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+play :- nl, write('Choose the type of game you want to play (1vs1/1vsAI/AIvsAI)'), nl,
+				repeat,	
+				    read(Type), 
+				    (\+ start(Type) -> 
+				            write('invalid option, try again:'),
+					    nl,
+					    fail
+				    ),
+				repeat
+	                            %get move
+	                            %move piece
+	                            %show board
+	                            %check victory (if fail, repeats)
+	                            .
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
