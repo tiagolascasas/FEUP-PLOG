@@ -46,46 +46,67 @@ printWaiterPos :- waiterPos(X, Y), write('Waiter in table '), write(X), write(' 
 gameType('null').
 gameRunning('null').
 
-start_1vs1 :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), 
+start_1vs1 :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'),
 				assert(gameType('1vs1')), nl, initGame, write('1 vs 1 game started successfully'), nl, printBoard.
 
-start_1vsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), 
+start_1vsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'),
 				assert(gameType('1vsAI')), nl, initGame, write('1 vs AI game started successfully'), nl, printBoard.
 
-start_AIvsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), 
+start_AIvsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'),
 				assert(gameType('AIvsAI')), nl, initGame, write('AI vs AI game started successfully'), nl, printBoard.
-				
+
 initGame :- assert(gameRunning('yes')).
+
+checkVictory :- fail.
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Movements
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+getMove(X) :- nl, write('Position of piece '),
+					repeat,
+						read(X),
+						( (X == 'n' ; X == 's'; X == 'e' ; X== 'w' ;
+							X == 'ne', X == 'nw', X == 'se'; X == 'sw';
+							X == 'c') -> ! ;
+								write('Invalid position, try again '), nl, fail).
+
+move(X).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Start
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+start(N):- N \= '1vs1', N \= '1vsAI', N \= 'AIvsAI', fail.
 start('1vs1') :- start_1vs1.
 start('1vsAI') :- start_1vsAI.
 start('AIvsAI') :- start_AIvsAI.
 
-start(N):- N \= '1vs1', N \= '1vsAI', N \= 'AIvsAI', fail.
+startGame :-
+		repeat,
+			read(Type),
+			(start(Type) -> ! ;
+				write('Invalid option, try again '),
+				nl,
+				fail
+			).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Game cycle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 play :- nl, write('Choose the type of game you want to play (1vs1/1vsAI/AIvsAI)'), nl,
-				repeat,	
-				    read(Type), 
-				    (\+ start(Type) -> 
-				            write('invalid option, try again:'),
-					    nl,
-					    fail
-				    ),
-				repeat
-	                            %get move
-	                            %move piece
-	                            %show board
-	                            %check victory (if fail, repeats)
-	                            .
+				startGame,
+				repeat,
+						%get move
+						getMove(X),
+						%move piece
+						move(X),
+						%show board
+						printBoard,
+						%check victory (if fail, repeats)
+						(checkVictory -> ! ; fail).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
