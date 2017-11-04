@@ -43,6 +43,8 @@ printWaiterPos :- waiterPos(X, Y), write('Waiter in table '), write(X), write(' 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :- dynamic gameType/1.
 :- dynamic gameRunning/1.
+:- dynamic currentPiece/1.
+
 gameType('null').
 gameRunning('null').
 
@@ -55,25 +57,32 @@ start_1vsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'),
 start_AIvsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'),
 				assert(gameType('AIvsAI')), nl, initGame, write('AI vs AI game started successfully'), nl, printBoard.
 
-initGame :- assert(gameRunning('yes')).
+initGame :- assert(gameRunning('yes')), assert(currentPiece(b)).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Movements and game logic
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 checkVictory :- fail.
 
+flipCurrentPiece :- currentPiece(b) -> (retract(currentPiece(b)), assert(currentPiece(g))) ;
+										(retract(currentPiece(g)), assert(currentPiece(b))).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Movements
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-getMove(X) :- nl, write('Position of piece '),
+getMove(X) :- nl, write('Position of piece '), currentPiece(Piece), write(Piece), write(' '),
 					repeat,
 						read(X),
-						( (X == 'n' ; X == 's'; X == 'e' ; X== 'w' ;
-							X == 'ne'; X == 'nw'; X == 'se'; X == 'sw';
-							X == 'c') -> ! ;
+						( (X == n ; X == s; X == e ; X== w ;
+							X == ne; X == nw; X == se; X == sw;
+							X == c ; X == stop) -> !, (X == stop -> break ; !) ;
 								write('Invalid position, try again '), nl, fail).
 
-move(X).
-
+move(X) :- 	currentPiece(Piece),		%gets current piece (black or green)
+			waiterPos(T, P), 			%get current position of waiter
+			retract(pos(T, X, _)),		%clear new position for piece
+			assert(pos(T, X, Piece)),	%moves piece to new position
+			retract(waiterPos(T, P)), 	%removes current waiter pos
+			assert(waiterPos(X, T)),	%moves waiter to new pos
+			flipCurrentPiece.			%changes the current piece
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -99,14 +108,11 @@ startGame :-
 % Game cycle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 play :- nl, write('Choose the type of game you want to play (1vs1/1vsAI/AIvsAI)'), nl,
-				startGame,
+				startGame,							%initializes a match
 				repeat,
-						%get move
-						getMove(X),
-						%move piece
-						move(X),
-						%show board
-						printBoard,
-						%check victory (if fail, repeats)
-						(checkVictory -> ! ; fail).
+						getMove(X),					%get move
+						move(X),					%move piece
+						printBoard,					%show board
+						(checkVictory -> ! ; fail). %check victory (if fail, repeats)
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

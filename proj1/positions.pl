@@ -1,4 +1,5 @@
 :- dynamic pos/3.
+:- dynamic waiterPos/2.
 
 pos(nw, nw, o). pos(nw, n, o). pos(nw, ne, o).   	pos( n, nw, o). pos( n, n, o). pos( n, ne, o).   	pos(ne, nw, o). pos(ne, n, o). pos(ne, ne, o).
 pos(nw,  w, o). pos(nw, c, o). pos(nw, e,  o).   	pos( n,  w, o). pos( n, c, o). pos( n,  e, o).   	pos(ne,  w, o). pos(ne, c, o). pos(ne,  e, o).
@@ -13,3 +14,5 @@ pos(sw,  w, o). pos(sw, c, o). pos(sw, e,  o).   	pos( s,  w, o). pos( s, c, o).
 pos(sw, sw, o). pos(sw, s, o). pos(sw, se, o).   	pos( s, sw, o). pos( s, s, o). pos( s, se, o).   	pos(se, sw, o). pos(se, s, o). pos(se, se, o).
 
 waiterPos(c, c).
+pos(null, null, b).
+pos(null, null, g).
