@@ -68,7 +68,7 @@ getMove(X) :- nl, write('Position of piece '),
 					repeat,
 						read(X),
 						( (X == 'n' ; X == 's'; X == 'e' ; X== 'w' ;
-							X == 'ne', X == 'nw', X == 'se'; X == 'sw';
+							X == 'ne'; X == 'nw'; X == 'se'; X == 'sw';
 							X == 'c') -> ! ;
 								write('Invalid position, try again '), nl, fail).
 
