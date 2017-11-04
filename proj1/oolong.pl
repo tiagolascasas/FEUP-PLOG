@@ -1,4 +1,5 @@
 :- use_module(library(random)).
+:- use_module(library(lists)).
 :- use_module(library(system)).
 :- include('positions.pl').
 
@@ -48,13 +49,13 @@ printWaiterPos :- waiterPos(X, Y), write('Waiter in table '), write(X), write(' 
 gameType('null').
 gameRunning('null').
 
-start_1vs1 :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'),
+start_1vs1 :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), retract(gameType(null)),
 				assert(gameType('1vs1')), nl, initGame, write('1 vs 1 game started successfully'), nl, printBoard.
 
-start_1vsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'),
+start_1vsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), retract(gameType(null)),
 				assert(gameType('1vsAI')), nl, initGame, write('1 vs AI game started successfully'), nl, printBoard.
 
-start_AIvsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'),
+start_AIvsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), retract(gameType(null)),
 				assert(gameType('AIvsAI')), nl, initGame, write('AI vs AI game started successfully'), nl, printBoard.
 
 initGame :- assert(gameRunning('yes')), assert(currentPiece(b)).
@@ -63,12 +64,22 @@ initGame :- assert(gameRunning('yes')), assert(currentPiece(b)).
 
 % Movements and game logic
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-checkVictory :- fail.
+checkVictory :- checkVictoryPiece(b) ; checkVictoryPiece(g) ; fail.
+
+checkVictoryPiece(Piece) :- fail.
 
 flipCurrentPiece :- currentPiece(b) -> (retract(currentPiece(b)), assert(currentPiece(g))) ;
 										(retract(currentPiece(g)), assert(currentPiece(b))).
 
-getMove(X) :- nl, write('Position of piece '), currentPiece(Piece), write(Piece), write(' '),
+getMove(X) :- getMove1vs1(X) ; getMove1vsAI(X) ; getMoveAIvsAI(X).
+
+getMove1vs1(X) :- gameType('1vs1'), getMoveHuman(X).
+getMove1vsAI(X) :- gameType('1vsAI'), currentPiece(b) -> getMoveHuman(X) ; getMoveAI(X).
+getMoveAIvsAI(X) :- gameType('AIvsAI'), getMoveAI(X).
+
+getMoveAI(X) :- random(0, 9, R), nth0(R, [n, s, e, w, nw, ne, sw, se, c], X).
+
+getMoveHuman(X) :- nl, write('Position of piece '), currentPiece(Piece), write(Piece), write(' '),
 					repeat,
 						read(X),
 						( (X == n ; X == s; X == e ; X== w ;
