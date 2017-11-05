@@ -133,11 +133,13 @@ move(X) :- 	currentPiece(Piece),		%gets current piece (black or green)
 % Start
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%starts a new game based on a given game type
 start(N):- N \= '1vs1', N \= '1vsAI', N \= 'AIvsAI', fail.
 start('1vs1') :- start_1vs1.
 start('1vsAI') :- start_1vsAI.
 start('AIvsAI') :- start_AIvsAI.
 
+%starts a new game, reading from the keyboard a valid game type
 startGame :-
 		repeat,
 			read(Type),
