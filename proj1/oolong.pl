@@ -41,6 +41,8 @@ printWaiterPos :- waiterPos(X, Y), write('Waiter in table '), write(X), write(' 
 printCurrPlayerMove(Pos) :- currentPiece(Player), write('Player '), write(Player), write(' placed a piece on table '),
 							waiterPos(Table, _), write(Table), write(', position '), write(Pos), nl.
 
+printVictoryAnnouncement(Player) :- write('Player '), write(Player), write(' is victorious!'), nl.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -71,7 +73,17 @@ initGame :- assert(currentPiece(b)).
 checkVictory :- checkVictoryPlayer(b) ; checkVictoryPlayer(g) ; fail.
 
 %checks if a player's pieces fulfill the victory conditions
-checkVictoryPlayer(Player) :- fail.
+checkVictoryPlayer(Player) :- countTablePieces(Player, [n, s, e, w, nw, ne, sw, se, c], N), N >= 5,
+								printVictoryAnnouncement(Player).
+
+%counts the number of tables in which a player has 5 or more pieces
+countTablePieces(_, [], 0).
+countTablePieces(Player, [Table|Lis], M) :- getPieceCountOnTable(Player, Table, Cnt),
+											Cnt >= 5, countTablePieces(Player, Lis, N), M is N + 1.
+countTablePieces(Player, [Table|Lis], N) :- countTablePieces(Player, Lis, N).
+
+%gets the number of pieces of a certain player on a certain table
+getPieceCountOnTable(Player, Table, N) :- findall(X, pos(Table, _, Player), Lis), length(Lis, N).
 
 %changes the active player
 flipCurrentPiece :- currentPiece(b) -> (retract(currentPiece(b)), assert(currentPiece(g))) ;
@@ -139,6 +151,9 @@ startGame :-
 
 % Game cycle
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%main game loop. It starts a new match and repeats an input-logic-display cycle until
+%one of the players fulfills the victory conditions.
 play :- nl, write('Choose the type of game you want to play (1vs1/1vsAI/AIvsAI)'), nl,
 				startGame,							%initializes a match
 				repeat,
