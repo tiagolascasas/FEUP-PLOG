@@ -1,3 +1,5 @@
+% Initial positions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :- dynamic pos/3.
 :- dynamic waiterPos/2.
 
@@ -16,3 +18,5 @@ pos(sw, sw, o). pos(sw, s, o). pos(sw, se, o).   	pos( s, sw, o). pos( s, s, o).
 waiterPos(c, c).
 pos(null, null, b).
 pos(null, null, g).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

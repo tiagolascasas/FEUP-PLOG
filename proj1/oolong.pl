@@ -37,6 +37,10 @@ printTableBottom(Table) :- printPos(Table, sw), write(' '), printPos(Table, s), 
 printPos(Table, Pos) :- pos(Table, Pos, X), write(X).
 
 printWaiterPos :- waiterPos(X, Y), write('Waiter in table '), write(X), write(' and position '), write(Y).
+
+printCurrPlayerMove(Pos) :- currentPiece(Player), write('Player '), write(Player), write(' placed a piece on table '),
+							waiterPos(Table, _), write(Table), write(', position '), write(Pos), nl.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -62,29 +66,48 @@ initGame :- assert(currentPiece(b)).
 
 % Movements and game logic
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-checkVictory :- checkVictoryPiece(b) ; checkVictoryPiece(g) ; fail.
 
-checkVictoryPiece(Piece) :- fail.
+%checks if any of the players fulfill the victory conditions
+checkVictory :- checkVictoryPlayer(b) ; checkVictoryPlayer(g) ; fail.
 
+%checks if a player's pieces fulfill the victory conditions
+checkVictoryPlayer(Player) :- fail.
+
+%changes the active player
 flipCurrentPiece :- currentPiece(b) -> (retract(currentPiece(b)), assert(currentPiece(g))) ;
 										(retract(currentPiece(g)), assert(currentPiece(b))).
 
+%gets a move based on the game type
 getMove(X) :- gameType('AIvsAI'), !,getMoveAI(X).
 getMove(X) :- gameType('1vsAI'), !, getMove1vsAI(X).
 getMove(X) :- gameType('1vs1'), !, getMoveHuman(X).
 
+%gets a move under the 1 vs AI mode: if the current piece is black,
+%gets it from the keyboard; otherwise, gets it from the AI
 getMove1vsAI(X) :- currentPiece(b) -> getMoveHuman(X) ; getMoveAI(X).
 
-getMoveAI(X) :- random(0, 9, R), nth0(R, [n, s, e, w, nw, ne, sw, se, c], X).
+%gets a move from the AI, testing for validity (randomizes a position until it is valid)
+getMoveAI(X) :- repeat,
+					random(0, 9, R), nth0(R, [n, s, e, w, nw, ne, sw, se, c], X),
+					(validPosition(X) -> ! ; fail).
 
+%gets a move from the keyboard, testing for validity
 getMoveHuman(X) :- nl, write('Position of piece '), currentPiece(Piece), write(Piece), write(' '),
 					repeat,
 						read(X),
-						( (X == n ; X == s; X == e ; X== w ;
-							X == ne; X == nw; X == se; X == sw;
-							X == c ; X == stop) -> !, (X == stop -> break ; !) ;
+						((validInput(X), validPosition(X)) -> !, (X == stop -> break ; !) ;
 								write('Invalid position, try again '), nl, fail).
 
+%verifies if input is a valid table coord or the stop signal
+validInput(X) :- X == n ; X == s; X == e ; X== w ;
+					X == ne; X == nw; X == se; X == sw;
+					X == c ; X == stop.
+
+%verifies if the position within the waiter's table is valid
+validPosition(X) :- waiterPos(T, _),	%get waiter table
+					pos(T, X, o). 		%check if new position is vacant
+
+%moves the current piece to the position X of the waiter's table
 move(X) :- 	currentPiece(Piece),		%gets current piece (black or green)
 			waiterPos(T, P), 			%get current position of waiter
 			retract(pos(T, X, _)),		%clear new position for piece
@@ -120,6 +143,7 @@ play :- nl, write('Choose the type of game you want to play (1vs1/1vsAI/AIvsAI)'
 				startGame,							%initializes a match
 				repeat,
 						getMove(X),					%get move
+						printCurrPlayerMove(X),		%prints the current player's move
 						move(X),					%move piece
 						printBoard,					%show board
 						(checkVictory -> ! ; fail). %check victory (if fail, repeats)
