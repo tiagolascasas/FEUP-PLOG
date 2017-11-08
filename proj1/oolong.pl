@@ -50,6 +50,7 @@ printVictoryAnnouncement(Player) :- write('Player '), write(Player), write(' is 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :- dynamic gameType/1.
 :- dynamic currentPiece/1.
+:- dynamic specMovePos/4.
 
 %gameType('null').
 
@@ -148,6 +149,8 @@ validPosition(_, stop).
 move(Table, Position) :-currentPiece(Piece),				%gets current piece (black or green)
 						retract(pos(Table, Position, _)),	%clear new position for piece
 						assert(pos(Table, Position, Piece)),%moves piece to new position
+						waiterPos(_, T),
+						checkSpecialMove(T),%check if special moves apply (can use waiter pos to find table)
 						retract(waiterPos(_, _)), 			%removes current waiter pos
 						assert(waiterPos(Position, Table)),	%moves waiter to new pos
 						flipCurrentPiece.					%changes the current piece
@@ -174,7 +177,8 @@ startGame :-
 			).
 
 reset :- retractall(pos(_,_,_)), retractall(gameType(_)), retractall(waiterPos(_,_)),
-		 retractall(currentPiece(_)), initPositions, assert(currentPiece(b)),
+		 retractall(currentPiece(_)), retractall(specMovePos(_, _, _, _)),
+		 initPositions, initSpecMoves, assert(currentPiece(b)),
 		 write('Game finished successfully'), nl.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -186,6 +190,7 @@ reset :- retractall(pos(_,_,_)), retractall(gameType(_)), retractall(waiterPos(_
 %one of the players fulfills the victory conditions.
 play :- nl, write('Choose the type of game you want to play (1vs1/1vsAI/AIvsAI)'), nl,
 				initPositions,
+				initSpecMoves,
 				startGame,										%initializes a match
 				repeat,
 						getMove(Table, Position),				%get move
@@ -195,3 +200,36 @@ play :- nl, write('Choose the type of game you want to play (1vs1/1vsAI/AIvsAI)'
 						(checkVictory -> ! ; fail). 		%check victory (if fail, repeats)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+% Special Moves
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+initSpecMoves :- initSpecMoves(9, [[specialMovePiece, 3, b], [specialMovePiece, 3, g], [specialMoveWaiter, 5, b], [specialMoveWaiter, 5, g],
+				   [specialMoveRotate, 4, a], [specialMoveRotate, 4, a], [specialMoveSwitch, 4, a], [specialMoveSwitch, 5, a]],
+				  [n, s, e, w, nw, ne, sw, se, c]).
+				
+
+initSpecMoves(_, [], []).
+initSpecMoves(N, [[SpecMove, AmountPieces, TargetP| _]|Xs], L) :- random(0, N, R), nth0(R, L, Table), 
+		 assert(specMovePos(SpecMove, Table, AmountPieces, TargetP)),
+		 delete(L, Table, L1),
+		 initSpecMoves(N-1, Xs, L1).
+
+
+checkSpecialMove(Table) :- specMovePos(SpecMove, Table, Amount, TargetP), currentPiece(Player), getPieceCountOnTable(Player, Table, N),
+			   ((N >= Amount) -> G =.. [SpecMove, Table, Amount, TargetP], G; !).
+
+
+specialMovePiece(Table, Amount, b).
+specialMovePiece(Table, Amount, g).
+specialMoveWaiter(Table, Amount, b).
+specialMoveWaiter(Table, Amount, g).
+specialMoveRotate(Table, Amount, _).
+specialMoveRotate(Table, Amount, _).
+specialMoveSwitch(Table, Amount, _).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
