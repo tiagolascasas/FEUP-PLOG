@@ -6,6 +6,7 @@
 % Display
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 printBoard :- 	nl,
+				printRow0, nl,
 				printRow1, nl,
 				printRow2, nl,
 				printRow3, nl, nl,
@@ -14,21 +15,24 @@ printBoard :- 	nl,
 				printRow6, nl, nl,
 				printRow7, nl,
 				printRow8, nl,
-				printRow9, nl, nl,
+				printRow9, nl,
+				printRow10, nl, nl,
 				write('o - Empty g - Green  b - Black'), nl,
 				printWaiterPos, nl, nl.
 
-printRow1 :- printTableTop(nw), write('   '), printTableTop(n), write('   '), printTableTop(ne).
-printRow2 :- printTableMiddle(nw), write('   '), printTableMiddle(n), write('   '), printTableMiddle(ne).
-printRow3 :- printTableBottom(nw), write('   '), printTableBottom(n), write('   '), printTableBottom(ne).
+printRow0 :- write('                                 '), writeSpecMove(n).
+printRow1 :- write('                                 '), printTableTop(nw), write('   '), printTableTop(n), write('   '), printTableTop(ne).
+printRow2 :- writeSpecMove(nw), printTableMiddle(nw), write('   '), printTableMiddle(n), write('   '), printTableMiddle(ne), writeSpecMove(ne).
+printRow3 :- write('                                 '), printTableBottom(nw), write('   '), printTableBottom(n), write('   '), printTableBottom(ne).
 
-printRow4 :- printTableTop(w), write('   '), printTableTop(c), write('   '), printTableTop(e).
-printRow5 :- printTableMiddle(w), write('   '), printTableMiddle(c), write('   '), printTableMiddle(e).
-printRow6 :- printTableBottom(w), write('   '), printTableBottom(c), write('   '), printTableBottom(e).
+printRow4 :- write('                                 '), printTableTop(w), write('   '), printTableTop(c), write('   '), printTableTop(e).
+printRow5 :- writeSpecMove(w), printTableMiddle(w), write('   '), printTableMiddle(c), write('   '), printTableMiddle(e), writeSpecMove(e).
+printRow6 :- write('                                 '), printTableBottom(w), write('   '), printTableBottom(c), write('   '), printTableBottom(e).
 
-printRow7 :- printTableTop(nw), write('   '), printTableTop(s), write('   '), printTableTop(se).
-printRow8 :- printTableMiddle(sw), write('   '), printTableMiddle(s), write('   '), printTableMiddle(se).
-printRow9 :- printTableBottom(sw), write('   '), printTableBottom(s), write('   '), printTableBottom(se).
+printRow7 :- write('                                 '), printTableTop(sw), write('   '), printTableTop(s), write('   '), printTableTop(se).
+printRow8 :- writeSpecMove(sw),                         printTableMiddle(sw), write('   '), printTableMiddle(s), write('   '), printTableMiddle(se), writeSpecMove(se).
+printRow9 :- write('                                 '), printTableBottom(sw), write('   '), printTableBottom(s), write('   '), printTableBottom(se).
+printRow10 :- write('                                '), writeSpecMove(s).
 
 printTableTop(Table) :- printPos(Table, nw), write(' '), printPos(Table, n), write(' '), printPos(Table, ne).
 printTableMiddle(Table) :- printPos(Table, w), write(' '), printPos(Table, c), write(' '), printPos(Table, e).
@@ -43,6 +47,19 @@ printCurrPlayerMove(Table, Pos) :- currentPiece(Player), write('Player '), write
 
 printVictoryAnnouncement(Player) :- write('Player '), write(Player), write(' is victorious!'), nl.
 
+/* specMovePos(SpecMove, Table, AmountPieces, TargetP)
+[specialMovePiece, 3, b], [specialMovePiece, 3, g], [specialMoveWaiter, 5, b], [specialMoveWaiter, 5, g],
+[specialMoveRotate, 4, a], [specialMoveRotate, 4, a], [specialMoveSwitch, 4, a], [specialMoveSwitch, 5, a]],
+*/
+writeSpecMove(Table) :- specMovePos(SpecMove, Table, AmountPieces, TargetP), writeSpecMove(SpecMove, AmountPieces, TargetP).
+writeSpecMove(specialMovePiece, _, b) :-        write(' Move 1 black piece              ').
+writeSpecMove(specialMovePiece, _, g) :-        write(' Move 1 green piece              ').
+writeSpecMove(specialMoveWaiter, _, b) :-       write(' Black moves waiter              ').
+writeSpecMove(specialMoveWaiter, _, g) :-       write(' Green moves waiter              ').
+writeSpecMove(specialMoveRotate, _, _) :-       write(' Player rotates table            ').
+writeSpecMove(specialMoveSwitch, 4, _) :-       write(' Switch 2 unconquered            ').
+writeSpecMove(specialMoveSwitch, 5, _) :-       write(' Switch unconquered w/ conquered ').
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -51,6 +68,8 @@ printVictoryAnnouncement(Player) :- write('Player '), write(Player), write(' is 
 :- dynamic gameType/1.
 :- dynamic currentPiece/1.
 :- dynamic specMovePos/4.
+:- dynamic waiterSwitched/0.
+:- dynamic newPosition/2.
 
 %gameType('null').
 
@@ -149,9 +168,12 @@ validPosition(_, stop).
 move(Table, Position) :-currentPiece(Piece),				%gets current piece (black or green)
 						retract(pos(Table, Position, _)),	%clear new position for piece
 						assert(pos(Table, Position, Piece)),%moves piece to new position
+						assert(newPosition(Table, Position)),
 						checkSpecialMove,%check if special moves apply (can use waiter pos to find table)
-						retract(waiterPos(_, _)), 			%removes current waiter pos
-						assert(waiterPos(Position, Table)),	%moves waiter to new pos
+						(waiterSwitched -> retract(waiterSwitched);
+						 retract(waiterPos(_, _)),                        %removes current waiter pos
+						 assert(waiterPos(Position, Table))),	%moves waiter to new pos
+						retract(newPosition(_, _)),
 						flipCurrentPiece.					%changes the current piece
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -259,12 +281,15 @@ specialMovePiece(T1, P1, T2, P2) :- pos(T1, P1, Player),
 				assert(pos(T1, P1, o)).
 
 %Special Move that allows one player to move the waiter to the same position on another table (one for each piece color) 
-specialMoveWaiter(_, _) :- write('Destiny Table: '), read(Table),
+specialMoveWaiter(_, Player) :- write('Player '), write(Player), write(' choose destiny Table: '),
+				read(Table),				
 				specialMoveWaiter(Table).
+
 							
-specialMoveWaiter(Table) :- waiterPos(_, Position),
+specialMoveWaiter(Table) :- newPosition(Position, _),
 			     retract(waiterPos(_, _)),
-			     assert(waiterPos(Table, Position)).
+			     assert(waiterPos(Table, Position)),
+			     assert(waiterSwitched).
 
 %Special Move that allows the last player that played to rotate the current table 
 specialMoveRotate(_, _) :- repeat,
@@ -273,9 +298,10 @@ specialMoveRotate(_, _) :- repeat,
 				specialMoveRotate(Amount).
 
 specialMoveRotate(Amount) :- waiterPos(Table, _), 
-				tableToList(Table, L1),
+				tableToList(Table, [C | L1]),
 				rotateListRight(L1, Amount, L2),
-                                rebuildTable(Table, L2).
+				append([C], L2, L3),
+                                rebuildTable(Table, L3).
 				
 rotateListRight(L1, Amount, L2) :- append(L3, L4, L1),
 				append(L4, L3, L2),
@@ -308,7 +334,7 @@ specialMoveSwitch(T1, T2) :- tableToList(T1, L1),
 
 
 %Auxiliary methods to turn table predicates into a list and vice-versa
-rebuildTable(Table, [NW, N, NE, W, C, E, SW, S, SE | _]) :- retractall(pos(Table,_,_)),
+rebuildTable(Table, [C, NW, N, NE, E, SE, S, SW, W| _]) :- retractall(pos(Table,_,_)),
                                 assert(pos(Table, nw, NW)), assert(pos(Table, n, N)), assert(pos(Table, ne, NE)),
                                 assert(pos(Table, w, W)), assert(pos(Table, c, C)), assert(pos(Table, e, E)),
                                 assert(pos(Table, sw, SW)), assert(pos(Table, s, S)), assert(pos(Table, se, SE)).
@@ -316,7 +342,7 @@ rebuildTable(Table, [NW, N, NE, W, C, E, SW, S, SE | _]) :- retractall(pos(Table
 tableToList(Table, L) :-pos(Table, nw, NW), pos(Table, n, N), pos(Table, ne, NE),
                         pos(Table, w, W), pos(Table, c, C), pos(Table, e, E),
                         pos(Table, sw, SW), pos(Table, s, S), pos(Table, se, SE),
-			append([], [NW, N, NE, W, C, E, SW, S, SE], L).
+			append([], [C, NW, N, NE, E, SE, S, SW, W] , L).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
