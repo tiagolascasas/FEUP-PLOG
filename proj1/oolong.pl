@@ -68,18 +68,34 @@ writeSpecMove(specialMoveSwitch, 5, _) :-       write(' Switch unconquered w/ co
 :- dynamic waiterSwitched/0.
 :- dynamic newPosition/2.
 :- dynamic specialMoveActive/1.
+:- dynamic difficulty/1.
 %gameType('null').
 
 start_1vs1 :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), %retract(gameType(null)),
-				assert(gameType('1vs1')), nl, initGame, write('1 vs 1 game started successfully'), nl, printBoard.
+				assert(gameType('1vs1')), nl, initGame, write('1 vs 1 game started successfully'), nl.
 
 start_1vsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), %retract(gameType(null)),
-				assert(gameType('1vsAI')), nl, initGame, write('1 vs AI game started successfully'), nl, printBoard.
+				assert(gameType('1vsAI')), nl, initGame, setAIdifficulty, write('1 vs AI game started successfully'), nl.
 
 start_AIvsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), %retract(gameType(null)),
-				assert(gameType('AIvsAI')), nl, initGame, write('AI vs AI game started successfully'), nl, printBoard.
+				assert(gameType('AIvsAI')), nl, initGame, setAIdifficulty, nl, write('AI vs AI game started successfully'), nl.
 
 initGame :- assert(currentPiece(b)).
+
+setAIdifficulty :- nl, write('Choose the difficulty of game you want to play (\'easy\'/\'hard\')'), nl,
+                repeat,
+                        read(Type),
+                        (setAIdifficulty(Type) -> ! ;
+                                write('Invalid option, try again '),
+                                nl,
+                                fail
+                        ).
+
+setAIdifficulty(N):- N \= 'easy', N \= 'hard', fail.
+setAIdifficulty('easy') :- \+ difficulty('easy'), \+ difficulty('hard'),
+                           assert(difficulty('easy')).
+setAIdifficulty('hard') :- \+ difficulty('easy'), \+ difficulty('hard'),
+                           assert(difficulty('hard')).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -187,7 +203,7 @@ start('1vsAI') :- start_1vsAI.
 start('AIvsAI') :- start_AIvsAI.
 
 %starts a new game, reading from the keyboard a valid game type
-startGame :-
+startGame :- nl, write('Choose the type of game you want to play (\'1vs1\'/\'1vsAI\'/\'AIvsAI\')'), nl,
 		repeat,
 			read(Type),
 			(start(Type) -> ! ;
@@ -196,7 +212,7 @@ startGame :-
 				fail
 			).
 
-reset :- retractall(pos(_,_,_)), retractall(gameType(_)), retractall(waiterPos(_,_)),
+reset :- retractall(pos(_,_,_)), retractall(gameType(_)), retractall(waiterPos(_,_)), retractall(difficulty(_)),
 		 retractall(currentPiece(_)), retractall(specMovePos(_, _, _, _)), retractall(specialMoveActive(_)),
 		 initPositions, initSpecMoves, assert(currentPiece(b)),
 		 write('Game finished successfully'), nl.
@@ -208,10 +224,11 @@ reset :- retractall(pos(_,_,_)), retractall(gameType(_)), retractall(waiterPos(_
 
 %main game loop. It starts a new match and repeats an input-logic-display cycle until
 %one of the players fulfills the victory conditions.
-play :- nl, write('Choose the type of game you want to play (\'1vs1\'/\'1vsAI\'/\'AIvsAI\')'), nl,
+play :- 
 				initPositions,
 				initSpecMoves,
-				startGame,										%initializes a match
+				startGame,
+				printBoard,										%initializes a match
 				repeat,
 						getMove(Table, Position),				%get move
 						printCurrPlayerMove(Table, Position),	%prints the current player's move
