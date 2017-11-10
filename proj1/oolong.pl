@@ -232,7 +232,8 @@ initSpecMoves :- initSpecMoves(8, [[specialMovePiece, 3, b], [specialMovePiece, 
 				activateSpecMoves.	
 
 initSpecMoves(_, [], []).
-initSpecMoves(N, [[SpecMove, AmountPieces, TargetP| _]|Xs], L) :- random(0, N, R), nth0(R, L, Table),
+initSpecMoves(N, [[SpecMove, AmountPieces, TargetP| _]|Xs], L) :- /*random(0, N, R), nth0(R, L, Table),*/
+		 random_member(Table, L),
 		 assert(specMovePos(SpecMove, Table, AmountPieces, TargetP)),
 		 delete(L, Table, L1),
 		 N1 is N-1, initSpecMoves(N1, Xs, L1).
@@ -253,6 +254,24 @@ checkSpecialMove :- waiterPos(Table, _),
 		              G =.. [SpecMove, Amount, TargetP], G; !).
 
 %Special Move that allows one player to move one of its pieces from an unconquered table to another (one for each piece color) 
+
+%%AI
+specialMovePiece(_, Player) :- (gameType('AIvsAI') ; (gameType('1vsAI') , Player == g)), !,
+			     repeat,
+        			choosePosList(OTable, OPosition, Player),
+                                ((pos(OTable, OPosition, Player) , getPieceCountOnTable(b, OTable, N1), N1 < 5, getPieceCountOnTable(g, OTable, N2), N2 < 5) 
+                                -> ! ; fail),
+                             write('Choose origin table |: '), write(OTable), nl, 
+                             write('Choose position |: '), write(OPosition), nl,
+                             repeat,
+			        choosePosList(DTable, DPosition, o),
+                                ((pos(DTable, DPosition, o) , getPieceCountOnTable(b, DTable,N3), N3 < 5, getPieceCountOnTable(g, DTable,N4), N4 < 5) 
+                                -> ! ; fail),
+                             write('Choose destiny table |: '), write(DTable), nl, 
+                             write('Choose position |: '), write(DPosition), nl,
+                             specialMovePiece(OTable, OPosition, DTable, DPosition).
+
+%%Player
 specialMovePiece(_, b) :- repeat, 
 				write('Choose origin table '), read(OTable), nl, 
 				write('Choose position '), read(OPosition), nl,
@@ -285,8 +304,20 @@ specialMovePiece(T1, P1, T2, P2) :- pos(T1, P1, Player),
 				assert(pos(T1, P1, o)).
 
 %Special Move that allows one player to move the waiter to the same position on another table (one for each piece color) 
-specialMoveWaiter(_, _) :- waiterPos(T, _), 
-		             write('Choose destiny table '),
+
+%%AI
+specialMoveWaiter(_, Player) :- (gameType('AIvsAI') ; (gameType('1vsAI') , Player == g)), !,
+                             waiterPos(T, _),
+                             write('Choose destiny table |: '),
+                             repeat,
+                                    choosePosList(Table, _, _),
+                                    ((Table \= T, pos(Table, _, _)) -> !; fail),                                 
+                             write(Table),
+                             specialMoveWaiter(Table).
+
+%%Player
+specialMoveWaiter(_, Player) :- waiterPos(T, _), 
+		             write('Player '), write(Player), write(' choose destiny table '),
 			     repeat,
 				    read(Table),
 				    ((Table \= T, pos(Table, _, _)) -> !; write('Invalid position, try again '), fail), 				
@@ -299,6 +330,15 @@ specialMoveWaiter(Table) :- newPosition(Position, _),
 			     assert(waiterSwitched).
 
 %Special Move that allows the last player that played to rotate the current table 
+
+%%AI
+specialMoveRotate(_, Player) :- (gameType('AIvsAI') ; (gameType('1vsAI') , Player == g)), !,
+                              write('Rotate current Table clockwise by |: '),
+                              random(0, 8, Amount),
+                              write(Amount), nl,
+                              specialMoveRotate(Amount).
+
+%%Player
 specialMoveRotate(_, _) :- write('Rotate current Table clockwise by '),
 			      repeat,
 				    read(Amount), nl,
@@ -317,17 +357,59 @@ rotateListRight(L1, Amount, L2) :- append(L3, L4, L1),
 
 %Special move that allows the last player that played to swap 2 unconquered tables
 specialMoveSwitch(Amount, _) :- Amount = 4,
-       				write('Choose first unconquered table: '), nl, 
+                               countTablePieces(b, [n, s, e, w, nw, ne, sw, se, c], N1),
+                               countTablePieces(g, [n, s, e, w, nw, ne, sw, se, c], N2),
+                               Cnt is N1 + N2, (Cnt > 7 -> write('Can\'t make special move, not enough unconquered tables'), ! ; fail).
+%%AI
+specialMoveSwitch(Amount, Player) :- (gameType('AIvsAI') ; (gameType('1vsAI') , Player == g)), !,
+                                Amount = 4,
+                                write('Choose first unconquered table'), nl, write('|: '),
+                                    repeat,
+                                        choosePosList(T1, _, _),
+                                        (getPieceCountOnTable(b, T1, N1), N1 < 5, getPieceCountOnTable(g, T1, N2), N2 < 5 -> ! ; fail),
+                                write(T1), nl,
+                                write('Choose second unconquered table'), nl, write('|: '),
+                                    repeat,
+                                        choosePosList(T2, _, _),
+                                        (getPieceCountOnTable(b, T2, N3), N3 < 5, getPieceCountOnTable(g, T2, N4), N4 < 5 -> ! ; fail),
+                                write(T2), nl,
+                                specialMoveSwitch(T1, T2).
+
+%%Player
+specialMoveSwitch(Amount, _) :- Amount = 4,
+       				write('Choose first unconquered table '), nl,
 				    repeat,
 			                read(T1),
                                         (getPieceCountOnTable(b, T1, N1), N1 < 5, getPieceCountOnTable(g, T1, N2), N2 < 5 -> ! ; write('Invalid table, try again '), fail),
-       			        write('Choose second unconquered table: '), nl,
+       			        write('Choose second unconquered table '), nl,
 				    repeat,
 			                read(T2),
 				        (getPieceCountOnTable(b, T2, N3), N3 < 5, getPieceCountOnTable(g, T2, N4), N4 < 5 -> ! ; write('Invalid table, try again '), fail),
                                 specialMoveSwitch(T1, T2).
 
 %Special move that allows the last player that played to swap an unconquered table with a conquered one
+
+specialMoveSwitch(Amount, _) :- Amount = 5,
+                               countTablePieces(b, [n, s, e, w, nw, ne, sw, se, c], N1),
+                               countTablePieces(g, [n, s, e, w, nw, ne, sw, se, c], N2),
+                               Cnt is N1 + N2, (Cnt > 8 -> write('Can\'t make special move, not enough unconquered tables'), ! ; fail).
+                               
+%%AI
+specialMoveSwitch(Amount, Player) :- (gameType('AIvsAI') ; (gameType('1vsAI') , Player == g)), !,
+                                Amount = 5,
+                                write('Choose conquered table'), nl, write('|: '),
+                                    repeat,
+                                        choosePosList(T1, _, _),
+                                        (((getPieceCountOnTable(b, T1, N1), N1 >= 5) ; (getPieceCountOnTable(g, T1, N2), N2 >= 5)) -> ! ; fail),
+                                write(T1), nl,
+                                write('Choose unconquered table'), nl, write('|: '),
+                                    repeat,
+                                        choosePosList(T2, _, _),
+                                        (getPieceCountOnTable(b, T2, N3), N3 < 5, getPieceCountOnTable(g, T2, N4), N4 < 5 -> ! ; fail),
+                                write(T2), nl,
+                                specialMoveSwitch(T1, T2).
+
+%%Player
 specialMoveSwitch(Amount, _) :- Amount = 5,
 				write('Choose conquered table '), nl, 
                                     repeat,
@@ -363,6 +445,13 @@ tableToList(Table, L) :-pos(Table, nw, NW), pos(Table, n, N), pos(Table, ne, NE)
                         pos(Table, w, W), pos(Table, c, C), pos(Table, e, E),
                         pos(Table, sw, SW), pos(Table, s, S), pos(Table, se, SE),
 			append([], [C, NW, N, NE, E, SE, S, SW, W] , L).
+
+%Auxiliary methods to be used by the AI to select a position with the tile given in player
+choosePosList(Table, Position, Player) :- repeat,
+                        random_member(Table, [nw, n, ne, w, c, e, sw, s, se]),
+                        random_member(Position, [nw, n, ne, w, c, e, sw, s, se]),
+                        (pos(Table, Position, Player) -> ! ; fail).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
