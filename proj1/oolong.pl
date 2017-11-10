@@ -122,10 +122,10 @@ getMove1vsAI(Table, Position) :- currentPiece(b) -> getMoveHuman(Table, Position
 getMoveAI(Table, Position) :- waiterPos(T, _), checkFullTable(T), !,
 								repeat,
 									random(0, 9, R), nth0(R, [n, s, e, w, nw, ne, sw, se, c], Table),
-									(\+checkFullTable(Table) -> ! ; fail),
+									(\+checkFullTable(Table) -> ! ; fail),  
 								repeat,
 									random(0, 9, R), nth0(R, [n, s, e, w, nw, ne, sw, se, c], Position),
-									(\+validPosition(Table, Position) -> ! ; fail).
+									(validPosition(Table, Position) -> ! ; fail).
 
 getMoveAI(Table, Position) :- repeat,
 								waiterPos(Table, _),
@@ -157,7 +157,8 @@ validInput(X) :- X == n ; X == s; X == e ; X== w ;
 					X == c ; X == stop.
 
 %verifies if the position within the waiter's table is valid
-validPosition(Table, Position) :- pos(Table, Position, o), waiterPos(_, WP), Position \= WP.
+validPosition(Table, Position) :- pos(Table, Position, o), waiterPos(WT, WP),
+                                ((Table \= WT) ; (Table == WT, Position \= WP)).
 validPosition(stop, _).
 validPosition(_, stop).
 
@@ -171,7 +172,7 @@ move(Table, Position) :-currentPiece(Piece),				%gets current piece (black or gr
 						 retract(waiterPos(_, _)),                        %removes current waiter pos
 						 assert(waiterPos(Position, Table))),	%moves waiter to new pos
 						retract(newPosition(_, _)),
-						flipCurrentPiece.					%changes the current piece
+						flipCurrentPiece.				%changes the current piece
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
