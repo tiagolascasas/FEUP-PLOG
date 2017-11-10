@@ -121,16 +121,17 @@ getMove1vsAI(Table, Position) :- currentPiece(b) -> getMoveHuman(Table, Position
 %gets a move from the AI, testing for validity (randomizes a position until it is valid)
 getMoveAI(Table, Position) :- waiterPos(T, _), checkFullTable(T), !,
 								repeat,
-									random(0, 9, R), nth0(R, [n, s, e, w, nw, ne, sw, se, c], Table),
-									(\+checkFullTable(Table) -> ! ; fail),  
-								repeat,
-									random(0, 9, R), nth0(R, [n, s, e, w, nw, ne, sw, se, c], Position),
+								        random_member(Table, [n, s, e, w, nw, ne, sw, se, c]),
+								        (\+checkFullTable(Table) -> ! ; fail),  
+								repeat, 
+								        random_member(Position, [n, s, e, w, nw, ne, sw, se, c]),
 									(validPosition(Table, Position) -> ! ; fail).
 
 getMoveAI(Table, Position) :- repeat,
 								waiterPos(Table, _),
-								random(0, 9, R), nth0(R, [n, s, e, w, nw, ne, sw, se, c], Position),
+								random_member(Position, [n, s, e, w, nw, ne, sw, se, c]),
 								(validPosition(Table, Position) -> ! ; fail).
+
 
 %gets a move from the keyboard, testing for validity
 getMoveHuman(Table, Position) :- waiterPos(T, _), checkFullTable(T), !,
