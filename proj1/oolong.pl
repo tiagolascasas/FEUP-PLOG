@@ -293,7 +293,7 @@ initSpecMoves :- initSpecMoves(8, [[specialMovePiece, 3, b], [specialMovePiece, 
 				activateSpecMoves.
 
 initSpecMoves(_, [], []).
-initSpecMoves(N, [[SpecMove, AmountPieces, TargetP| _]|Xs], L) :- /*random(0, N, R), nth0(R, L, Table),*/
+initSpecMoves(N, [[SpecMove, AmountPieces, TargetP| _]|Xs], L) :-
 		 random_member(Table, L),
 		 assert(specMovePos(SpecMove, Table, AmountPieces, TargetP)),
 		 delete(L, Table, L1),
