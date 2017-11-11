@@ -69,6 +69,7 @@ writeSpecMove(specialMoveSwitch, 5, _) :-       write(' Switch unconquered w/ co
 :- dynamic newPosition/2.
 :- dynamic specialMoveActive/1.
 :- dynamic difficulty/1.
+:- dynamic smallestTable/2.
 %gameType('null').
 
 start_1vs1 :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), %retract(gameType(null)),
@@ -149,7 +150,8 @@ getMoveAI(Table, Position) :- 	difficulty(easy),
 									(validPosition(Table, Position) -> ! ; fail).
 getMoveAI(Table, Position) :- 	difficulty(hard),
 								waiterPos(Table, _),
-								getBestPosition(Table, Position).
+								getBestPosition(Table, Position),
+								write('Best position: '), write(Position), nl.
 
 %gets the best position in order to make the next player play their piece in a
 %table in which they have the least pieces
@@ -256,7 +258,7 @@ startGame :- nl, write('Choose the type of game you want to play (\'1vs1\'/\'1vs
 
 reset :- retractall(pos(_,_,_)), retractall(gameType(_)), retractall(waiterPos(_,_)), retractall(difficulty(_)),
 		 retractall(currentPiece(_)), retractall(specMovePos(_, _, _, _)), retractall(specialMoveActive(_)),
-		 initPositions, initSpecMoves, assert(currentPiece(b)),
+		 retractall(smallestTable(_, _)), assert(currentPiece(b)),
 		 write('Game finished successfully'), nl.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
