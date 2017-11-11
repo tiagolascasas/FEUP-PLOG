@@ -134,20 +134,62 @@ getMove(Table, Position) :- gameType('1vs1'), !, getMoveHuman(Table, Position).
 %gets it from the keyboard; otherwise, gets it from the AI
 getMove1vsAI(Table, Position) :- currentPiece(b) -> getMoveHuman(Table, Position) ; getMoveAI(Table, Position).
 
-%gets a move from the AI, testing for validity (randomizes a position until it is valid)
+%gets a move from the AI, testing for validity (move depends on difficulty)
 getMoveAI(Table, Position) :- waiterPos(T, _), checkFullTable(T), !,
 								repeat,
 								        random_member(Table, [n, s, e, w, nw, ne, sw, se, c]),
-								        (\+checkFullTable(Table) -> ! ; fail),  
-								repeat, 
+								        (\+checkFullTable(Table) -> ! ; fail),
+								repeat,
 								        random_member(Position, [n, s, e, w, nw, ne, sw, se, c]),
+										(validPosition(Table, Position) -> ! ; fail).
+getMoveAI(Table, Position) :- 	difficulty(easy),
+								repeat,
+									waiterPos(Table, _),
+									random_member(Position, [n, s, e, w, nw, ne, sw, se, c]),
 									(validPosition(Table, Position) -> ! ; fail).
-
-getMoveAI(Table, Position) :- repeat,
+getMoveAI(Table, Position) :- 	difficulty(hard),
 								waiterPos(Table, _),
-								random_member(Position, [n, s, e, w, nw, ne, sw, se, c]),
-								(validPosition(Table, Position) -> ! ; fail).
+								getBestPosition(Table, Position).
 
+%gets the best position in order to make the next player play their piece in a
+%table in which they have the least pieces
+getBestPosition(Table, Position) :- getValidPositions(Table, [n, s, e, w, nw, ne, sw, se, c], P),
+									assert(smallestTable(10, c)),
+									getMinimalTable(P),
+									smallestTable(_, Position),
+									retract(smallestTable(_, _)).
+
+%gets all the valid (empty) positions in a given table
+getValidPositions(Table, [Pos|Posx], [Pos|Xs]) :- validPosition(Table, Pos), !,
+												getValidPositions(Table, Posx, Xs).
+getValidPositions(Table, [_|Posx], Xs) :- getValidPositions(Table, Posx, Xs).
+getValidPositions(_, [], []).
+
+%from a list of valid positions, picks the table to which that positions points
+%to in which the adversary has the least ammount of pieces on
+getMinimalTable([]).
+getMinimalTable([P|Ps]) :- 	currentPiece(Player), Player == b,
+										getPieceCountOnTable(g, P, N),
+										smallestTable(T, _),
+										T > N, 	retract(smallestTable(_,_)),
+												assert(smallestTable(N, P)),
+										getMinimalTable(Ps).
+getMinimalTable([P|Ps]) :- 	currentPiece(Player), Player == b,
+										getPieceCountOnTable(g, P, N),
+										smallestTable(T, _),
+										T =< N,
+										getMinimalTable(Ps).
+getMinimalTable([P|Ps]) :- 	currentPiece(Player), Player == g,
+										getPieceCountOnTable(b, P, N),
+										smallestTable(T, _),
+										T > N, 	retract(smallestTable(_,_)),
+												assert(smallestTable(N, P)),
+										getMinimalTable(Ps).
+getMinimalTable([P|Ps]) :- 	currentPiece(Player), Player == g,
+										getPieceCountOnTable(b, P, N),
+										smallestTable(T, _),
+										T =< N,
+										getMinimalTable(Ps).
 
 %gets a move from the keyboard, testing for validity
 getMoveHuman(Table, Position) :- waiterPos(T, _), checkFullTable(T), !,
@@ -224,7 +266,7 @@ reset :- retractall(pos(_,_,_)), retractall(gameType(_)), retractall(waiterPos(_
 
 %main game loop. It starts a new match and repeats an input-logic-display cycle until
 %one of the players fulfills the victory conditions.
-play :- 
+play :-
 				initPositions,
 				initSpecMoves,
 				startGame,
@@ -248,7 +290,7 @@ play :-
 initSpecMoves :- initSpecMoves(8, [[specialMovePiece, 3, b], [specialMovePiece, 3, g], [specialMoveWaiter, 5, b], [specialMoveWaiter, 5, g],
 				   [specialMoveRotate, 4, a], [specialMoveRotate, 4, a], [specialMoveSwitch, 4, a], [specialMoveSwitch, 5, a]],
 				  [n, s, e, w, nw, ne, sw, se]),
-				activateSpecMoves.	
+				activateSpecMoves.
 
 initSpecMoves(_, [], []).
 initSpecMoves(N, [[SpecMove, AmountPieces, TargetP| _]|Xs], L) :- /*random(0, N, R), nth0(R, L, Table),*/
@@ -272,47 +314,47 @@ checkSpecialMove :- waiterPos(Table, _),
 		              write('Special Move Unlocked:'), nl, writeSpecMove(Table), nl,
 		              G =.. [SpecMove, Amount, TargetP], G; !).
 
-%Special Move that allows one player to move one of its pieces from an unconquered table to another (one for each piece color) 
+%Special Move that allows one player to move one of its pieces from an unconquered table to another (one for each piece color)
 
 %%AI
 specialMovePiece(_, Player) :- (gameType('AIvsAI') ; (gameType('1vsAI') , Player == g)), !,
 			     repeat,
         			choosePosList(OTable, OPosition, Player),
-                                ((pos(OTable, OPosition, Player) , getPieceCountOnTable(b, OTable, N1), N1 < 5, getPieceCountOnTable(g, OTable, N2), N2 < 5) 
+                                ((pos(OTable, OPosition, Player) , getPieceCountOnTable(b, OTable, N1), N1 < 5, getPieceCountOnTable(g, OTable, N2), N2 < 5)
                                 -> ! ; fail),
-                             write('Choose origin table |: '), write(OTable), nl, 
+                             write('Choose origin table |: '), write(OTable), nl,
                              write('Choose position |: '), write(OPosition), nl,
                              repeat,
 			        choosePosList(DTable, DPosition, o),
-                                ((pos(DTable, DPosition, o) , getPieceCountOnTable(b, DTable,N3), N3 < 5, getPieceCountOnTable(g, DTable,N4), N4 < 5) 
+                                ((pos(DTable, DPosition, o) , getPieceCountOnTable(b, DTable,N3), N3 < 5, getPieceCountOnTable(g, DTable,N4), N4 < 5)
                                 -> ! ; fail),
-                             write('Choose destiny table |: '), write(DTable), nl, 
+                             write('Choose destiny table |: '), write(DTable), nl,
                              write('Choose position |: '), write(DPosition), nl,
                              specialMovePiece(OTable, OPosition, DTable, DPosition).
 
 %%Player
-specialMovePiece(_, b) :- repeat, 
-				write('Choose origin table '), read(OTable), nl, 
+specialMovePiece(_, b) :- repeat,
+				write('Choose origin table '), read(OTable), nl,
 				write('Choose position '), read(OPosition), nl,
-				((pos(OTable, OPosition, b) , getPieceCountOnTable(b, OTable, N1), N1 < 5, getPieceCountOnTable(g, OTable, N2), N2 < 5) 
+				((pos(OTable, OPosition, b) , getPieceCountOnTable(b, OTable, N1), N1 < 5, getPieceCountOnTable(g, OTable, N2), N2 < 5)
 				-> ! ; write('Invalid position, try again '), nl, fail),
-                             repeat, 
-                                write('Choose destiny table '), read(DTable), nl, 
+                             repeat,
+                                write('Choose destiny table '), read(DTable), nl,
                                 write('Choose position '), read(DPosition), nl,
-                                ((pos(DTable, DPosition, o) , getPieceCountOnTable(b, DTable,N3), N3 < 5, getPieceCountOnTable(g, DTable,N4), N4 < 5) 
+                                ((pos(DTable, DPosition, o) , getPieceCountOnTable(b, DTable,N3), N3 < 5, getPieceCountOnTable(g, DTable,N4), N4 < 5)
 				-> ! ; write('Invalid position, try again '), nl, fail),
 			     specialMovePiece(OTable, OPosition, DTable, DPosition).
-                             
-				
-specialMovePiece(_, g) :- repeat, 
-                                write('Choose origin table '), read(OTable), nl, 
+
+
+specialMovePiece(_, g) :- repeat,
+                                write('Choose origin table '), read(OTable), nl,
                                 write('Choose position '), read(OPosition), nl,
-                                ((pos(OTable, OPosition, g) , getPieceCountOnTable(b, OTable, N1), N1 < 5, getPieceCountOnTable(g, OTable, N2), N2 < 5) 
+                                ((pos(OTable, OPosition, g) , getPieceCountOnTable(b, OTable, N1), N1 < 5, getPieceCountOnTable(g, OTable, N2), N2 < 5)
                                 -> ! ; write('Invalid position, try again '), nl, fail),
-                             repeat, 
-                                write('Choose destiny table '), read(DTable), nl, 
+                             repeat,
+                                write('Choose destiny table '), read(DTable), nl,
                                 write('Choose position '), read(DPosition), nl,
-                                ((pos(DTable, DPosition, o) , getPieceCountOnTable(b, DTable,N3), N3 < 5, getPieceCountOnTable(g, DTable,N4), N4 < 5) 
+                                ((pos(DTable, DPosition, o) , getPieceCountOnTable(b, DTable,N3), N3 < 5, getPieceCountOnTable(g, DTable,N4), N4 < 5)
                                 -> ! ; write('Invalid position, try again '), nl, fail),
                              specialMovePiece(OTable, OPosition, DTable, DPosition).
 
@@ -322,7 +364,7 @@ specialMovePiece(T1, P1, T2, P2) :- pos(T1, P1, Player),
 				retract(pos(T1, P1, _)),
 				assert(pos(T1, P1, o)).
 
-%Special Move that allows one player to move the waiter to the same position on another table (one for each piece color) 
+%Special Move that allows one player to move the waiter to the same position on another table (one for each piece color)
 
 %%AI
 specialMoveWaiter(_, Player) :- (gameType('AIvsAI') ; (gameType('1vsAI') , Player == g)), !,
@@ -330,25 +372,25 @@ specialMoveWaiter(_, Player) :- (gameType('AIvsAI') ; (gameType('1vsAI') , Playe
                              write('Choose destiny table |: '),
                              repeat,
                                     choosePosList(Table, _, _),
-                                    ((Table \= T, pos(Table, _, _)) -> !; fail),                                 
+                                    ((Table \= T, pos(Table, _, _)) -> !; fail),
                              write(Table),
                              specialMoveWaiter(Table).
 
 %%Player
-specialMoveWaiter(_, Player) :- waiterPos(T, _), 
+specialMoveWaiter(_, Player) :- waiterPos(T, _),
 		             write('Player '), write(Player), write(' choose destiny table '),
 			     repeat,
 				    read(Table),
-				    ((Table \= T, pos(Table, _, _)) -> !; write('Invalid position, try again '), fail), 				
+				    ((Table \= T, pos(Table, _, _)) -> !; write('Invalid position, try again '), fail),
 			     specialMoveWaiter(Table).
 
-							
+
 specialMoveWaiter(Table) :- newPosition(Position, _),
 			     retract(waiterPos(_, _)),
 			     assert(waiterPos(Table, Position)),
 			     assert(waiterSwitched).
 
-%Special Move that allows the last player that played to rotate the current table 
+%Special Move that allows the last player that played to rotate the current table
 
 %%AI
 specialMoveRotate(_, Player) :- (gameType('AIvsAI') ; (gameType('1vsAI') , Player == g)), !,
@@ -364,12 +406,12 @@ specialMoveRotate(_, _) :- write('Rotate current Table clockwise by '),
 				    (Amount >= 0,  Amount < 8 -> ! ; write('Invalid amount, try again '), fail),
 	                      specialMoveRotate(Amount).
 
-specialMoveRotate(Amount) :- waiterPos(Table, _), 
+specialMoveRotate(Amount) :- waiterPos(Table, _),
 				tableToList(Table, [C | L1]),
 				rotateListRight(L1, Amount, L2),
 				append([C], L2, L3),
                                 rebuildTable(Table, L3).
-				
+
 rotateListRight(L1, Amount, L2) :- append(L3, L4, L1),
 				append(L4, L3, L2),
 				length(L4, Amount).
@@ -412,7 +454,7 @@ specialMoveSwitch(Amount, _) :- Amount = 5,
                                countTablePieces(b, [n, s, e, w, nw, ne, sw, se, c], N1),
                                countTablePieces(g, [n, s, e, w, nw, ne, sw, se, c], N2),
                                Cnt is N1 + N2, (Cnt > 8 -> write('Can\'t make special move, not enough unconquered tables'), ! ; fail).
-                               
+
 %%AI
 specialMoveSwitch(Amount, Player) :- (gameType('AIvsAI') ; (gameType('1vsAI') , Player == g)), !,
                                 Amount = 5,
@@ -430,9 +472,9 @@ specialMoveSwitch(Amount, Player) :- (gameType('AIvsAI') ; (gameType('1vsAI') , 
 
 %%Player
 specialMoveSwitch(Amount, _) :- Amount = 5,
-				write('Choose conquered table '), nl, 
+				write('Choose conquered table '), nl,
                                     repeat,
-				        read(T1),                                         
+				        read(T1),
                                         (((getPieceCountOnTable(b, T1, N1), N1 >= 5) ; (getPieceCountOnTable(g, T1, N2), N2 >= 5)) -> ! ; write('Invalid table, try again: '), fail),
 				write('Choose unconquered table '), nl,
                                     repeat,
@@ -440,10 +482,10 @@ specialMoveSwitch(Amount, _) :- Amount = 5,
                                      ((getPieceCountOnTable(b, T2, N3), N3 < 5, getPieceCountOnTable(g, T2, N4), N4 < 5, T1 \= T2)-> ! ; write('Invalid table, try again: '), fail),
                                 specialMoveSwitch(T1, T2).
 
-specialMoveSwitch(T1, T2) :- tableToList(T1, L1), 
-				tableToList(T2, L2), 
-				rebuildTable(T1, L2), 
-				rebuildTable(T2, L1), 
+specialMoveSwitch(T1, T2) :- tableToList(T1, L1),
+				tableToList(T2, L2),
+				rebuildTable(T1, L2),
+				rebuildTable(T2, L1),
 				waiterPos(Position, _),
 				newPosition(_, Table),
 				(Table == T1 -> assert(waiterSwitched),
@@ -473,4 +515,3 @@ choosePosList(Table, Position, Player) :- repeat,
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
