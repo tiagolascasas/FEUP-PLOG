@@ -5,6 +5,8 @@
 
 % Display
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%all the following atoms and predicates are meant to display the printBoard
+%by reading the internal game state
 printBoard :- 	nl,
 				printRow0, nl,
 				printRow1, nl,
@@ -20,6 +22,7 @@ printBoard :- 	nl,
 				write('o - Empty g - Green  b - Black'), nl,
 				printWaiterPos, nl, nl.
 
+%print the row specified in the fact's name
 printRow0 :- write('                                 '), writeSpecMove(n).
 printRow1 :- write('                                 '), printTableTop(nw), write('   '), printTableTop(n), write('   '), printTableTop(ne).
 printRow2 :- writeSpecMove(nw), printTableMiddle(nw), write('   '), printTableMiddle(n), write('   '), printTableMiddle(ne), writeSpecMove(ne).
@@ -34,20 +37,25 @@ printRow8 :- writeSpecMove(sw),                         printTableMiddle(sw), wr
 printRow9 :- write('                                 '), printTableBottom(sw), write('   '), printTableBottom(s), write('   '), printTableBottom(se).
 printRow10 :- write('                                '), writeSpecMove(s).
 
+%prints a table
 printTableTop(Table) :- printPos(Table, nw), write(' '), printPos(Table, n), write(' '), printPos(Table, ne).
 printTableMiddle(Table) :- printPos(Table, w), write(' '), printPos(Table, c), write(' '), printPos(Table, e).
 printTableBottom(Table) :- printPos(Table, sw), write(' '), printPos(Table, s), write(' '), printPos(Table, se).
 
+%prints a single position within a table
 printPos(Table, Pos) :- pos(Table, Pos, X), write(X).
 
+%prints the position of the waiter
 printWaiterPos :- waiterPos(X, Y), write('Waiter in table '), write(X), write(' and position '), write(Y).
 
+%prints the last move made
 printCurrPlayerMove(Table, Pos) :- currentPiece(Player), write('Player '), write(Player), write(' placed a piece on table '),
 									write(Table), write(', position '), write(Pos), nl.
 
+%prints a victory announcement
 printVictoryAnnouncement(Player) :- write('Player '), write(Player), write(' is victorious!'), nl.
 
-
+%prints the special moves information of a table
 writeSpecMove(Table) :- specMovePos(SpecMove, Table, AmountPieces, TargetP), writeSpecMove(SpecMove, AmountPieces, TargetP).
 writeSpecMove(specialMovePiece, _, b) :-        write(' Move 1 black piece              ').
 writeSpecMove(specialMovePiece, _, g) :-        write(' Move 1 green piece              ').
@@ -70,19 +78,23 @@ writeSpecMove(specialMoveSwitch, 5, _) :-       write(' Switch unconquered w/ co
 :- dynamic specialMoveActive/1.
 :- dynamic difficulty/1.
 :- dynamic smallestTable/2.
-%gameType('null').
 
+%starts a 1vs1 match
 start_1vs1 :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), %retract(gameType(null)),
 				assert(gameType('1vs1')), nl, initGame, write('1 vs 1 game started successfully'), nl.
 
+%starts a 1vsAI match
 start_1vsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), %retract(gameType(null)),
 				assert(gameType('1vsAI')), nl, initGame, setAIdifficulty, write('1 vs AI game started successfully'), nl.
 
+%starts an AIvsAI match
 start_AIvsAI :- \+ gameType('1vs1'), \+ gameType('1vsAI'), \+ gameType('AIvsAI'), %retract(gameType(null)),
 				assert(gameType('AIvsAI')), nl, initGame, setAIdifficulty, nl, write('AI vs AI game started successfully'), nl.
 
+%initializes the game by setting the current player to black.
 initGame :- assert(currentPiece(b)).
 
+%sets the difficulty of the AI, prompting the user accordingly
 setAIdifficulty :- nl, write('Choose the difficulty of game you want to play (\'easy\'/\'hard\')'), nl,
                 repeat,
                         read(Type),
@@ -92,6 +104,7 @@ setAIdifficulty :- nl, write('Choose the difficulty of game you want to play (\'
                                 fail
                         ).
 
+%sets the AI difficulty
 setAIdifficulty(N):- N \= 'easy', N \= 'hard', fail.
 setAIdifficulty('easy') :- \+ difficulty('easy'), \+ difficulty('hard'),
                            assert(difficulty('easy')).
@@ -256,10 +269,10 @@ startGame :- nl, write('Choose the type of game you want to play (\'1vs1\'/\'1vs
 				fail
 			).
 
+%resets the prolog database to the values prior to the game's start (no facts instantiated)
 reset :- retractall(pos(_,_,_)), retractall(gameType(_)), retractall(waiterPos(_,_)), retractall(difficulty(_)),
 		 retractall(currentPiece(_)), retractall(specMovePos(_, _, _, _)), retractall(specialMoveActive(_)),
-		 retractall(smallestTable(_, _)), assert(currentPiece(b)),
-		 write('Game finished successfully'), nl.
+		 retractall(smallestTable(_, _)), write('Game finished successfully'), nl.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -269,16 +282,16 @@ reset :- retractall(pos(_,_,_)), retractall(gameType(_)), retractall(waiterPos(_
 %main game loop. It starts a new match and repeats an input-logic-display cycle until
 %one of the players fulfills the victory conditions.
 play :-
-				initPositions,
-				initSpecMoves,
-				startGame,
-				printBoard,										%initializes a match
+				initPositions,									%initializes the positions
+				initSpecMoves,									%initializes the special moves
+				startGame,										%prompts for game type and difficulty
+				printBoard,										%prints the board at the start
 				repeat,
 						getMove(Table, Position),				%get move
 						printCurrPlayerMove(Table, Position),	%prints the current player's move
 						move(Table, Position),					%move piece
 						printBoard,								%show board
-						(checkVictory -> ! ; fail). 		%check victory (if fail, repeats)
+						(checkVictory -> ! ; fail). 			%check victory (if fail, repeats)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
