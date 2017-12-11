@@ -1,4 +1,4 @@
-:- use_module(libary(clpfd)).
+:- use_module(library(clpfd)).
 
 %test:
 %V = [[V1],[V2, V3],[V4, V5, V6],[V7, V8, V9, V10],[V11, V12, V13, V14, V15]]
@@ -17,7 +17,7 @@ solveTrid(V, T, R) :-
 		diagonalsRight(V),
 		diagonalsLeft(V),
 		innerSums(V, T),
-		flatten(V, Vf)
+		flatten(V, Vf),
 		labeling([], Vf).
 		
 setDomain([], _).
