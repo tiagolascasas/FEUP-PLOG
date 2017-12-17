@@ -47,7 +47,6 @@ horizontal([L|Lr]) :-
 
 %Sets each "\" diagonal of the board to have distinct elements within that diagonal
 diagonalsRight(V) :-
-        nl, write(V), nl, nl,
         length(V, N),
         diagonalsRight(V, N).
 diagonalsRight(_, 0).
@@ -57,7 +56,7 @@ diagonalsRight([V|Vx], N) :-
         diagonalsRight(Vx, M).
 
 restrictRight(V, N) :- restrictRight(V, N, [], 0).
-restrictRight([], _, Diagonal, _) :- all_distinct(Diagonal), write(Diagonal), nl.
+restrictRight([], _, Diagonal, _) :- all_distinct(Diagonal).
 restrictRight([X|Xs], N, Acc, R) :-
         element(Rn, X, Elem),
         append(Acc, [Elem], App),
