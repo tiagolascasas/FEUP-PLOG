@@ -1,19 +1,21 @@
 :- use_module(library(clpfd)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Trid entrypoint
+% Trid Entrypoint
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-trid(N, R) :-
-		generateTrid(N, R, V, T),
-		solveTrid(V, T, R),
+%Generates a Trid board of size N with NT triangle sums, solves it and prints the solution
+trid(N, NT) :-
+		generateTrid(N, NT, V, T),
+		solveTrid(V, T),
 		printTrid(V, T).
 
+%Tests the solver with a predetermined board.
+%Solution in http://rohanrao.blogspot.pt/2009/05/rules-of-trid.html
 testSolver :-
         V = [[V1],[V2, V3],[V4, V5, V6],[V7, V8, V9, V10],[V11, V12, V13, V14, V15]],
         T = [[V2, V4, V5, 12],[V4, V7, V8, 9],[V7, V11, V12, 6],[V7, V11, V12, 6],[V8, V12, V13, 12],[V9, V13, V14, 8]],
-        R = 5,
-        solveTrid(V, T, R),
+        solveTrid(V, T),
         write(V).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -23,9 +25,9 @@ testSolver :-
 %Trid solver:
 % V - list of lists with the vertices
 % T - list of liss with the triangles and inner sums
-% R - range of the numbers
-solveTrid(V, T, R) :-
-		setDomain(V, R),
+solveTrid(V, T) :-
+        length(V, Range),
+		setDomain(V, Range),
 		horizontal(V),
         diagonalsRight(V),
 		diagonalsLeft(V),
@@ -90,7 +92,7 @@ innerSums([X|Xs]) :-
 innerSum([T1, T2, T3, Sum]) :-
         T1 + T2 + T3 #= Sum.
 
-%flattens the lines of vertices list into a list of vertices
+%flattens the list of lists of vertices into a list of vertices
 flatten(List, Flat) :- flatten(List, Flat, []).
 flatten([], Flat, Flat).
 flatten([X|Xs], Flat, Acc) :-
@@ -98,13 +100,33 @@ flatten([X|Xs], Flat, Acc) :-
 		flatten(Xs, Flat, App).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Trid generator
+% Trid Generator
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-generateTrid(N, R, V, T).
+%Generates a Trid board
+% N - the number of rows
+% NT - the number of inner triangle sums
+% V - the generated board
+% T - the generated inner sums
+generateTrid(N, NT, V, T) :-
+        N > 0,
+        createBoard(N, V),
+        createInnerValues(N, NT, T).
+
+%creates a board of the specified dimension
+createBoard(N, V) :- createBoard(N, V, [], 0).
+createBoard(N, V, V, N).
+createBoard(N, V, Acc, Index) :-
+        I is Index + 1,
+        length(Row, I),
+        append(Acc, [Row], App),
+        createBoard(N, V, App, I).
+
+%creates inner triangle sums
+createInnerValues(N, NT, T).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Trid display
+% Trid Displayer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-printTrid(V, T).
+printTrid(V, T) :- write(V).
