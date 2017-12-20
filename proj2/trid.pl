@@ -154,4 +154,44 @@ generateInnerSum(V, ExistingSums, Sum).
 % Trid Displayer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-printTrid(V, T) :- write(V).
+printTrid(V, T) :- length(V, R), numberLength(R, Rlength), MaxNum is 3 * R - 3, R1 is R - 1,
+		numberLength(MaxNum, MaxNumLength), MaxLength is MaxNumLength*2,
+		printTrid(V, T, R1, Rlength, MaxLength).
+
+
+printTrid([Line], _, R, Rlength, MaxNumLength):-
+                Amount is (Rlength+ (MaxNumLength//2) + 1) * R, printSpaces(Amount),
+                printLine(Line, Rlength, MaxNumLength), nl.
+                
+printTrid([Line | Rest], T, R, Rlength, MaxNumLength):-
+		Amount is (Rlength+ (MaxNumLength//2) + 1) * R, printSpaces(Amount),
+                printLine(Line, Rlength, MaxNumLength), nl, nl, R1 is R - 1,
+		%ContentAmount is 1 + (Rlength+ (MaxNumLength//2) + 1) * R1, printSpaces(ContentAmount),
+                %printContentLine(Line, Rest, T, MaxNumLength), 
+		nl,
+                printTrid(Rest, T, R1, Rlength, MaxNumLength). 
+
+
+printLine([Element], Rlength, _) :- numberLength(Element, ElementLength),
+                Amount is Rlength - ElementLength,
+                printSpaces(Amount), print(Element).
+printLine([Element|Rest], Rlength, MaxNumLength) :- numberLength(Element, ElementLength),
+		Amount is Rlength - ElementLength,
+		printSpaces(Amount), print(Element), A is MaxNumLength + 2,
+		printHifen(A), printLine(Rest, Rlength, MaxNumLength).
+
+          
+printContentLine(PreviousLine, NextLine, Content, MaxNumLength).      
+
+
+%prints the given amount of spaces
+printSpaces(0).
+printSpaces(Amount):- write(' '), A is Amount - 1, printSpaces(A).
+
+%prints the given amount of hifens
+printHifen(0).
+printHifen(Amount):- write('_'), A is Amount - 1, printHifen(A).
+
+%counts the number of digits in a number
+numberLength(0, 0).
+numberLength(Number, Length):- X is Number//10, numberLength(X, L), Length is L + 1.
