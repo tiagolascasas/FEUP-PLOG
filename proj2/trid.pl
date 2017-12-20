@@ -1,5 +1,6 @@
 :- use_module(library(clpfd)).
 :- use_module(library(random)).
+:- use_module(library(lists)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Trid Entrypoints
@@ -9,6 +10,7 @@
 trid(N, NT) :-
         integer(N),
         integer(NT),
+        nl, write('Generated inner sums:'), nl,
 		generateTrid(N, NT, V, T),
 		solveTrid(V, T),
 		printTrid(V, T).
@@ -139,7 +141,7 @@ createBoard(N, V, Acc, Index) :-
         createBoard(N, V, App, I).
 
 %creates inner triangle sums
-createInnerSums(NT, V, T) :- createInnerSums(NT, V, T, [], Count).
+createInnerSums(NT, V, T) :- createInnerSums(NT, V, T, [], 0).
 createInnerSums(NT, _, T, T, NT).
 createInnerSums(NT, V, T, Acc, Count) :-
         generateInnerSum(V, Acc, Sum),
@@ -147,8 +149,41 @@ createInnerSums(NT, V, T, Acc, Count) :-
         CountInc is Count + 1,
         createInnerSums(NT, V, T, App, CountInc).
 
-generateInnerSum(V, ExistingSums, Sum).
+generateInnerSum(V, ExistingSums, Sum) :-
+        %repeat,
+        makeSum(V, Sum).
+        %exists(Sum, ExistingSums),
+        %fail.
 
+makeSum(V, [TopVertex, LeftVertex, RightVertex, SumValue]) :-
+        length(V, Size),
+        Limit is Size - 1,
+        random(1, Limit, TopRow),
+        BottomRow is TopRow + 1,
+        random(1, TopRow, TopVertexPos),
+        LeftVertexPos is TopVertexPos,
+        RightVertexPos is LeftVertexPos + 1,
+        getVertex(V, TopRow, TopVertexPos, TopVertex),
+        getVertex(V, BottomRow, LeftVertexPos, LeftVertex),
+        getVertex(V, BottomRow, RightVertexPos, RightVertex),
+        SumLimit is Size * 3,
+        random(3, SumLimit, SumValue), nl,
+        write('Vertex '), write(TopRow-TopVertexPos), write(' + '),
+        write('vertex '), write(BottomRow-LeftVertexPos), write(' + '),
+        write('vertex '), write(BottomRow-RightVertexPos), write(' = '),
+        write(SumValue), nl.
+
+getVertex(V, Row, Pos, Vertex) :- getVertex(V, Row, Pos, Vertex, 0).
+getVertex([V|Vx], Row, Pos, Vertex, Row) :-
+        nth1(Pos, V, Vertex).
+getVertex([], _, _, _, _).
+getVertex([_|Vx], Row, Pos, Vertex, Index) :-
+        IndexInc is Index + 1,
+        getVertex(Vx, Row, Pos, Vertex, IndexInc).
+
+exists([V1, V2, V3, _], [V1, V2, V3, _ | _]).
+exists(_, []) :- fail.
+exists(Sum, [_|Vx]) :- exists(Sum, Vx).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Trid Displayer
@@ -162,14 +197,14 @@ printTrid(V, T) :- length(V, R), numberLength(R, Rlength), MaxNum is 3 * R - 3, 
 printTrid([Line], _, R, Rlength, MaxNumLength):-
                 Amount is (Rlength+ (MaxNumLength//2) + 1) * R, printSpaces(Amount),
                 printLine(Line, Rlength, MaxNumLength), nl.
-                
+
 printTrid([Line | Rest], T, R, Rlength, MaxNumLength):-
 		Amount is (Rlength+ (MaxNumLength//2) + 1) * R, printSpaces(Amount),
                 printLine(Line, Rlength, MaxNumLength), nl, nl, R1 is R - 1,
 		%ContentAmount is 1 + (Rlength+ (MaxNumLength//2) + 1) * R1, printSpaces(ContentAmount),
-                %printContentLine(Line, Rest, T, MaxNumLength), 
+                %printContentLine(Line, Rest, T, MaxNumLength),
 		nl,
-                printTrid(Rest, T, R1, Rlength, MaxNumLength). 
+                printTrid(Rest, T, R1, Rlength, MaxNumLength).
 
 
 printLine([Element], Rlength, _) :- numberLength(Element, ElementLength),
@@ -180,8 +215,8 @@ printLine([Element|Rest], Rlength, MaxNumLength) :- numberLength(Element, Elemen
 		printSpaces(Amount), print(Element), A is MaxNumLength + 2,
 		printHifen(A), printLine(Rest, Rlength, MaxNumLength).
 
-          
-printContentLine(PreviousLine, NextLine, Content, MaxNumLength).      
+
+printContentLine(PreviousLine, NextLine, Content, MaxNumLength).
 
 
 %prints the given amount of spaces
