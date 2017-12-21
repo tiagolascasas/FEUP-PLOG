@@ -189,19 +189,19 @@ exists(Sum, [_|Vx]) :- exists(Sum, Vx).
 % Trid Displayer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-printTrid(V, T) :- length(V, R), R1 is R - 1,
-                printTrid(V, T, R1).
+printTrid(V) :- length(V, R), R1 is R - 1,
+                printTrid(V, R1).
 
-printTrid([Line], _, R):-
+printTrid([Line], R):-
                 Amount is 3 * R, printSpaces(Amount),
                 printLine(Line), nl.
 
-printTrid([Line | Rest], T, R):-
+printTrid([Line | Rest], R):-
                 Amount is 3 * R, printSpaces(Amount),
                 printLine(Line), nl, R1 is R - 1,
                 IntrAmount is (R1 * 3) + 2,printSpaces(IntrAmount),
                 printIntrLine(Line), nl,
-                printTrid(Rest, T, R1).
+                printTrid(Rest, R1).
 
 printLine([Element]) :- numberLength(Element, ElementLength),
                 Amount is 2 - ElementLength,
