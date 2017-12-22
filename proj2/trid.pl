@@ -13,12 +13,12 @@ trid(N, NT) :-
         nl, write('Generated inner sums:'), nl,
 		generateTrid(N, NT, V, T),
 		solveTrid(V, T),
-		printTrid(V, T).
+		printTrid(V).
 
 %Solves a trid board V with inner sums T and prints the solution
 trid(V, T) :-
         solveTrid(V, T),
-        printTrid(V, T).
+        printTrid(V).
 
 %Tests the solver with a predetermined board.
 %Solution in http://rohanrao.blogspot.pt/2009/05/rules-of-trid.html
