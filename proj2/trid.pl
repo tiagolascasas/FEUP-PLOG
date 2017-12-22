@@ -13,12 +13,12 @@ trid(N, NT) :-
         nl, write('Generated inner sums:'), nl,
 		generateTrid(N, NT, V, T),
 		solveTrid(V, T),
-		printTrid(V, T).
+		printTrid(V).
 
 %Solves a trid board V with inner sums T and prints the solution
 trid(V, T) :-
         solveTrid(V, T),
-        printTrid(V, T).
+        printTrid(V).
 
 %Tests the solver with a predetermined board.
 %Solution in http://rohanrao.blogspot.pt/2009/05/rules-of-trid.html
@@ -141,21 +141,22 @@ createBoard(N, V, Acc, Index) :-
         createBoard(N, V, App, I).
 
 %creates inner triangle sums
-createInnerSums(NT, V, T) :- createInnerSums(NT, V, T, [], 0).
-createInnerSums(NT, _, T, T, NT).
-createInnerSums(NT, V, T, Acc, Count) :-
-        generateInnerSum(V, Acc, Sum),
+createInnerSums(NT, V, T) :- createInnerSums(NT, V, T, [], 0, []).
+createInnerSums(NT, _, T, T, NT, Tuples) :- writeSums(T, Tuples).
+createInnerSums(NT, V, T, Acc, Count, AccTuple) :-
+        generateInnerSum(V, AccTuple, Sum, Tuple),
         append(Acc, [Sum], App),
+        append(AccTuple, [Tuple], AppTuple),
         CountInc is Count + 1,
-        createInnerSums(NT, V, T, App, CountInc).
+        createInnerSums(NT, V, T, App, CountInc, AppTuple).
 
-generateInnerSum(V, ExistingSums, Sum) :-
-        %repeat,
-        makeSum(V, Sum).
-        %exists(Sum, ExistingSums),
-        %fail.
+generateInnerSum(V, ExistingSums, Sum, Tuple) :-
+        makeSum(V, Sum, Tuple),
+        \+ member(Tuple, ExistingSums).
+generateInnerSum(V, ExistingSums, Sum, Tuple) :-
+        generateInnerSum(V, ExistingSums, Sum, Tuple).
 
-makeSum(V, [TopVertex, LeftVertex, RightVertex, SumValue]) :-
+makeSum(V, [TopVertex, LeftVertex, RightVertex, SumValue], TopRow-TopVertexPos-BottomRow-LeftVertexPos-BottomRow-RightVertexPos) :-
         length(V, Size),
         Limit is Size - 1,
         random(1, Limit, TopRow),
@@ -167,11 +168,7 @@ makeSum(V, [TopVertex, LeftVertex, RightVertex, SumValue]) :-
         getVertex(V, BottomRow, LeftVertexPos, LeftVertex),
         getVertex(V, BottomRow, RightVertexPos, RightVertex),
         SumLimit is Size * 3,
-        random(3, SumLimit, SumValue), nl,
-        write('Vertex '), write(TopRow-TopVertexPos), write(' + '),
-        write('vertex '), write(BottomRow-LeftVertexPos), write(' + '),
-        write('vertex '), write(BottomRow-RightVertexPos), write(' = '),
-        write(SumValue), nl.
+        random(6, SumLimit, SumValue).
 
 getVertex(V, Row, Pos, Vertex) :- getVertex(V, Row, Pos, Vertex, 0).
 getVertex([V|Vx], Row, Pos, Vertex, Row) :-
@@ -181,13 +178,17 @@ getVertex([_|Vx], Row, Pos, Vertex, Index) :-
         IndexInc is Index + 1,
         getVertex(Vx, Row, Pos, Vertex, IndexInc).
 
-exists([V1, V2, V3, _], [V1, V2, V3, _ | _]).
-exists(_, []) :- fail.
-exists(Sum, [_|Vx]) :- exists(Sum, Vx).
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Trid Displayer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+writeSums([], []).
+writeSums([[_, _, _, SumValue] | Ts], [TopRow-TopVertexPos-BottomRow-LeftVertexPos-BottomRow-RightVertexPos | Tts]) :-
+    write('Vertex '), write(TopRow-TopVertexPos), write(' + '),
+    write('vertex '), write(BottomRow-LeftVertexPos), write(' + '),
+    write('vertex '), write(BottomRow-RightVertexPos), write(' = '),
+    write(SumValue), nl,
+    writeSums(Ts, Tts).
 
 printTrid(V) :- length(V, R), R1 is R - 1,
                 printTrid(V, R1).
