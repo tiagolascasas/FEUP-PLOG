@@ -43,7 +43,7 @@ solveTrid(V, T) :-
 		innerSums(T),
 		flatten(V, Vf),
         reset_timer,
-		labeling([], Vf),
+		labeling([ffc], Vf),
         print_time.
 
 %Sets the domain of all vertices between 1 and the specified value R
@@ -142,7 +142,7 @@ createBoard(N, V, Acc, Index) :-
 
 %creates inner triangle sums
 createInnerSums(NT, V, T) :- createInnerSums(NT, V, T, [], 0, []).
-createInnerSums(NT, _, T, T, NT, Tuples) :- writeSums(T, Tuples).
+createInnerSums(NT, _, T, T, NT, Tuples) :- printSums(T, Tuples).
 createInnerSums(NT, V, T, Acc, Count, AccTuple) :-
         generateInnerSum(V, AccTuple, Sum, Tuple),
         append(Acc, [Sum], App),
@@ -150,12 +150,14 @@ createInnerSums(NT, V, T, Acc, Count, AccTuple) :-
         CountInc is Count + 1,
         createInnerSums(NT, V, T, App, CountInc, AppTuple).
 
+%creates an unique inner triangle sum, assuring that the triangle is not repeated
 generateInnerSum(V, ExistingSums, Sum, Tuple) :-
         makeSum(V, Sum, Tuple),
         \+ member(Tuple, ExistingSums).
 generateInnerSum(V, ExistingSums, Sum, Tuple) :-
         generateInnerSum(V, ExistingSums, Sum, Tuple).
 
+%creates a single inner triangle sum
 makeSum(V, [TopVertex, LeftVertex, RightVertex, SumValue], TopRow-TopVertexPos-BottomRow-LeftVertexPos-BottomRow-RightVertexPos) :-
         length(V, Size),
         Limit is Size - 1,
@@ -170,8 +172,9 @@ makeSum(V, [TopVertex, LeftVertex, RightVertex, SumValue], TopRow-TopVertexPos-B
         SumLimit is Size * 3,
         random(6, SumLimit, SumValue).
 
+%gets the vertex content variable based on a row and position
 getVertex(V, Row, Pos, Vertex) :- getVertex(V, Row, Pos, Vertex, 0).
-getVertex([V|Vx], Row, Pos, Vertex, Row) :-
+getVertex([V|_], Row, Pos, Vertex, Row) :-
         nth1(Pos, V, Vertex).
 getVertex([], _, _, _, _).
 getVertex([_|Vx], Row, Pos, Vertex, Index) :-
@@ -182,14 +185,16 @@ getVertex([_|Vx], Row, Pos, Vertex, Index) :-
 % Trid Displayer
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-writeSums([], []).
-writeSums([[_, _, _, SumValue] | Ts], [TopRow-TopVertexPos-BottomRow-LeftVertexPos-BottomRow-RightVertexPos | Tts]) :-
+%prints the inner triangle sums
+printSums([], []).
+printSums([[_, _, _, SumValue] | Ts], [TopRow-TopVertexPos-BottomRow-LeftVertexPos-BottomRow-RightVertexPos | Tts]) :-
     write('Vertex '), write(TopRow-TopVertexPos), write(' + '),
     write('vertex '), write(BottomRow-LeftVertexPos), write(' + '),
     write('vertex '), write(BottomRow-RightVertexPos), write(' = '),
     write(SumValue), nl,
-    writeSums(Ts, Tts).
+    printSums(Ts, Tts).
 
+%prints the Trid triangle
 printTrid(V) :- length(V, R), R1 is R - 1,
                 printTrid(V, R1).
 
@@ -204,6 +209,7 @@ printTrid([Line | Rest], R):-
                 printIntrLine(Line), nl,
                 printTrid(Rest, R1).
 
+%prints a line of the trid triangle
 printLine([Element]) :- numberLength(Element, ElementLength),
                 Amount is 2 - ElementLength,
                 printZeros(Amount), print(Element).
